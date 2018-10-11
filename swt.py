@@ -14,6 +14,7 @@ import numpy as np
 """
 
 
+# 3.1 The Stroke Width Transform
 def swt():
     argc = len(sys.argv)
     if argc > 1:
@@ -92,6 +93,9 @@ def swt():
         for (i, j) in ray:
             swt_map[i, j] = min(median, swt_map[i, j])
 
+    return swt_map
+
+    """
     # just a test part to see if the swt works
     for i in range(height):
         for j in range(width):
@@ -100,10 +104,17 @@ def swt():
     cv2.imshow('swt_map', swt_map)
     cv2.waitKey()
     cv2.destroyAllWindows()
+    """
+
+
+# 3.2 Finding letters candidates
+def letters_candidates(swt_map):
+
 
 
 def main():
-    swt()
+    swt_map = swt()
+    let_cand = letters_candidates(swt_map)
 
 
 if __name__ == "__main__":
