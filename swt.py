@@ -131,6 +131,7 @@ def letters_candidates(swt_map):
                                 if 0.333 < swt_map[ni, nj] / swt_map[i, j] < 3.0:
                                     labels_map[ni, nj] = label
                                     point_list.append((ni, nj))
+            label += 1
     return labels_map
 
 
