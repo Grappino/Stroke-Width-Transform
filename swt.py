@@ -30,7 +30,7 @@ def swt():
     cv2.destroyAllWindows()
     """
     # SWT Map with all pixel initialized with 255(infinity) as swt value
-    swt_map = 255*np.ones(image.shape)
+    swt_map = np.Infinity*np.ones(image.shape)
     # row, column
     height, width = image.shape
     # x gradient, y-gradient are computed using Sobel operator
@@ -99,7 +99,7 @@ def swt():
     # just a test part to see if the swt works
     for i in range(height):
         for j in range(width):
-            if swt_map[i, j] == 255:
+            if swt_map[i, j] == np.Infinity:
                 swt_map[i, j] = 0
     cv2.imshow('swt_map', swt_map)
     cv2.waitKey()
@@ -109,12 +109,37 @@ def swt():
 
 # 3.2 Finding letters candidates
 def letters_candidates(swt_map):
-
+    # labels_map initialized to 0
+    labels_map = np.zeros(swt_map.shape)
+    # number of rows and columns of swt map
+    nr, nc = swt_map.shape
+    # first valid label and region
+    label = 1
+    for i in range(nr):
+        for j in range(nc):
+            # if the current pixel is in a stroke
+            # assign it to a region with the current label
+            # search ... for similar swt value
+            if np.Infinity > swt_map[i, j] > 0 and labels_map[i, j] == 0:
+                point_list = [(i, j)]
+                labels_map[i, j] = label
+                while len(point_list) > 0:
+                    pi, pj = point_list.pop(0)
+                    for ni in range(max(pi - 1, 0), min(pi + 2, nr - 1)):
+                        for nj in range(max(pj - 1, 0), min(pj + 2, nc - 1)):
+                            if np.Infinity > swt_map[ni, nj] > 0 and labels_map[ni, nj] == 0:
+                                if 0.333 < swt_map[ni, nj] / swt_map[i, j] < 3.0:
+                                    labels_map[ni, nj] = label
+                                    point_list.append((ni, nj))
+    return labels_map
 
 
 def main():
     swt_map = swt()
-    let_cand = letters_candidates(swt_map)
+    labels = letters_candidates(swt_map)
+    cv2.imshow('labels', labels)
+    cv2.waitKey()
+    cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":
