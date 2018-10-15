@@ -147,7 +147,7 @@ def letters_candidates(swt_map):
         swt_vector = []
         for point in stroke:
             swt_vector.append(swt_map[point[0], point[1]])
-        if np.var(swt_vector) <= 0.5 * np.mean(swt_vector):
+        if np.var(swt_vector) <= 0.5 * np.mean(swt_vector)/2:
             # we search now the min and max value of x and y in the stroke
             max_x, min_x, max_y, min_y = 0, nc, 0, nr
             for point in stroke:
@@ -177,7 +177,7 @@ def letters_candidates(swt_map):
                 dm_ratio = diam / med
                 if dm_ratio <= 10:
                     # we check that the height is a value between 10px and 300px
-                    if 10 <= s_height < 300:
+                    if 10 <= s_height <= 300:
                         letters.append(stroke)
 
     result = np.zeros(swt_map.shape)
