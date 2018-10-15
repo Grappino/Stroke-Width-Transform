@@ -144,7 +144,10 @@ def letters_candidates(swt_map):
     letters = []
     # now we check the variance of the possible strokes and we reject the area with too high variance(half of the mean)
     for stroke in strokes_candidate:
-        if np.var(stroke) <= 0.5 * np.mean(stroke):
+        swt_vector = []
+        for point in stroke:
+            swt_vector.append(swt_map[point[0], point[1]])
+        if np.var(swt_vector) <= 0.5 * np.mean(swt_vector):
             # we search now the min and max value of x and y in the stroke
             max_x, min_x, max_y, min_y = 0, nc, 0, nr
             for point in stroke:
@@ -175,10 +178,16 @@ def letters_candidates(swt_map):
                 if dm_ratio <= 10:
                     # we check that the height is a value between 10px and 300px
                     if 10 <= s_height < 300:
-                        print s_height
                         letters.append(stroke)
+
+    result = np.zeros(swt_map.shape)
     for l in letters:
-        print l
+        for p in l:
+            result[p[0]][p[1]] = 255
+    cv2.imshow('result', result)
+    cv2.waitKey()
+    cv2.destroyAllWindows()
+
 
 
 def main():
