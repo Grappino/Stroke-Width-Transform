@@ -172,9 +172,9 @@ def letters_candidates(swt_map):
             # we check that the aspect_ratio is a value between 0.1 and 10
             if hw_ratio <= 10 and wh_ratio <= 10:
                 # the ratio between the diameter of connected components and its median stroke must be a value less then 10
-                diag = np.sqrt(s_width * s_width + s_height * s_height)
-                med = np.median(stroke)
-                dm_ratio = diag / med
+                diam = np.sqrt(s_width * s_width + s_height * s_height)
+                med = np.median(swt_vector)
+                dm_ratio = diam / med
                 if dm_ratio <= 10:
                     # we check that the height is a value between 10px and 300px
                     if 10 <= s_height < 300:
