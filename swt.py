@@ -141,35 +141,49 @@ def letters_candidates(swt_map):
     for x in strokes_candidate:
         print x
     '''
+    letters = []
     # now we check the variance of the possible strokes and we reject the area with too high variance(half of the mean)
     for stroke in strokes_candidate:
-        if np.var(stroke) > 0.5 * np.mean(stroke):
-            strokes_candidate.remove(stroke)
-            break
-        # we search now the min and max value of x and y in the stroke
-        max_x, min_x, max_y, min_y = 0, 255, 0, 255
-        for point in stroke:
-            if point[0] > max_x:
-                max_x = point[0]
-            if point[0] < min_x:
-                min_x = point[0]
-            if point[1] > max_y:
-                max_y = point[1]
-            if point[1] < min_y:
-                min_y = point[1]
-        s_width = max_x - min_x
-        s_height = max_y - min_y
-        hw_ratio = s_height / s_width
-        wh_ratio = s_width / s_height
-        # we check that the aspect_ratio is a value between 0.1 and 10
-        if hw_ratio > 10 or wh_ratio > 10:
-            strokes_candidate.remove(stroke)
-            break
-
+        if np.var(stroke) <= 0.5 * np.mean(stroke):
+            # we search now the min and max value of x and y in the stroke
+            max_x, min_x, max_y, min_y = 0, nc, 0, nr
+            for point in stroke:
+                if point[0] > max_x:
+                    max_x = point[0]
+                if point[0] < min_x:
+                    min_x = point[0]
+                if point[1] > max_y:
+                    max_y = point[1]
+                if point[1] < min_y:
+                    min_y = point[1]
+            s_width = max_x - min_x
+            s_height = max_y - min_y
+            if min_x == max_x:
+                hw_ratio = 11
+            else:
+                hw_ratio = s_height / s_width
+            if min_y == max_y:
+                wh_ratio = 11
+            else:
+                wh_ratio = s_width / s_height
+            # we check that the aspect_ratio is a value between 0.1 and 10
+            if hw_ratio <= 10 and wh_ratio <= 10:
+                # the ratio between the diameter of connected components and its median stroke must be a value less then 10
+                diag = np.sqrt(s_width * s_width + s_height * s_height)
+                med = np.median(stroke)
+                dm_ratio = diag / med
+                if dm_ratio <= 10:
+                    # we check that the height is a value between 10px and 300px
+                    if 10 <= s_height < 300:
+                        print s_height
+                        letters.append(stroke)
+    for l in letters:
+        print l
 
 
 def main():
     swt_map = swt()
+
     letters_candidates(swt_map)
     '''
     labels = letters_candidates(swt_map)
