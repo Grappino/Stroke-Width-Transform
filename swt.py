@@ -147,7 +147,7 @@ def letters_candidates(swt_map):
         swt_vector = []
         for point in stroke:
             swt_vector.append(swt_map[point[0], point[1]])
-        if np.var(swt_vector) <= 0.5 * np.mean(swt_vector)/2:
+        if np.var(swt_vector) <= 0.5 * np.mean(swt_vector):
             # we search now the min and max value of x and y in the stroke
             max_x, min_x, max_y, min_y = 0, nc, 0, nr
             for point in stroke:
