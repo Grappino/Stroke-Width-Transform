@@ -111,6 +111,8 @@ def swt():
 def letters_candidates(swt_map):
     # labels_map initialized to 0
     labels_map = np.zeros(swt_map.shape)
+    # strokes_candidate
+    strokes_candidate = []
     # number of rows and columns of swt map
     nr, nc = swt_map.shape
     # first valid label and region
@@ -121,6 +123,7 @@ def letters_candidates(swt_map):
             # assign it to a region with the current label
             # search ... for similar swt value
             if np.Infinity > swt_map[i, j] > 0 and labels_map[i, j] == 0:
+                stroke_candidate = [(i, j)]
                 point_list = [(i, j)]
                 labels_map[i, j] = label
                 while len(point_list) > 0:
@@ -131,16 +134,53 @@ def letters_candidates(swt_map):
                                 if 0.333 < swt_map[ni, nj] / swt_map[i, j] < 3.0:
                                     labels_map[ni, nj] = label
                                     point_list.append((ni, nj))
-            label += 1
-    return labels_map
+                                    stroke_candidate.append((ni, nj))
+                label += 1
+                strokes_candidate.append(stroke_candidate)
+    '''
+    for x in strokes_candidate:
+        print x
+    '''
+    # now we check the variance of the possible strokes and we reject the area with too high variance(half of the mean)
+    for stroke in strokes_candidate:
+        if np.var(stroke) > 0.5 * np.mean(stroke):
+            strokes_candidate.remove(stroke)
+            break
+        # we search now the min and max value of x and y in the stroke
+        max_x, min_x, max_y, min_y = 0, 255, 0, 255
+        for point in stroke:
+            if point[0] > max_x:
+                max_x = point[0]
+            if point[0] < min_x:
+                min_x = point[0]
+            if point[1] > max_y:
+                max_y = point[1]
+            if point[1] < min_y:
+                min_y = point[1]
+        s_width = max_x - min_x
+        s_height = max_y - min_y
+        hw_ratio = s_height / s_width
+        wh_ratio = s_width / s_height
+        # we check that the aspect_ratio is a value between 0.1 and 10
+        if hw_ratio > 10 or wh_ratio > 10:
+            strokes_candidate.remove(stroke)
+            break
+
 
 
 def main():
     swt_map = swt()
+    letters_candidates(swt_map)
+    '''
     labels = letters_candidates(swt_map)
+    height, width = labels.shape
+    for i in range(height):
+        for j in range(width):
+            print labels[i, j]
     cv2.imshow('labels', labels)
     cv2.waitKey()
     cv2.destroyAllWindows()
+    '''
 
 
 if __name__ == "__main__":
