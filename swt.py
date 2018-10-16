@@ -30,7 +30,7 @@ def swt():
     cv2.destroyAllWindows()
     """
     # SWT Map with all pixel initialized with infinite as swt value
-    swt_map = np.Infinity*np.ones(image.shape, image.dtype)
+    swt_map = 255*np.ones(image.shape, image.dtype)
     # row, column
     height, width = image.shape
     # x gradient, y-gradient are computed using Sobel operator
@@ -93,18 +93,14 @@ def swt():
         for (i, j) in ray:
             swt_map[i, j] = min(median, swt_map[i, j])
 
-    return swt_map
-
     """
     # just a test part to see if the swt works
-    for i in range(height):
-        for j in range(width):
-            if swt_map[i, j] == np.Infinity:
-                swt_map[i, j] = 0
     cv2.imshow('swt_map', swt_map)
     cv2.waitKey()
     cv2.destroyAllWindows()
     """
+
+    return swt_map
 
 
 # 3.2 Finding letters candidates
@@ -122,7 +118,7 @@ def letters_candidates(swt_map):
             # if the current pixel is in a stroke
             # assign it to a region with the current label
             # search ... for similar swt value
-            if np.Infinity > swt_map[i, j] > 0 and labels_map[i, j] == 0:
+            if 255 > swt_map[i, j] > 0 and labels_map[i, j] == 0:
                 stroke_candidate = [(i, j)]
                 point_list = [(i, j)]
                 labels_map[i, j] = label
@@ -130,17 +126,17 @@ def letters_candidates(swt_map):
                     pi, pj = point_list.pop(0)
                     for ni in range(max(pi - 1, 0), min(pi + 2, nr - 1)):
                         for nj in range(max(pj - 1, 0), min(pj + 2, nc - 1)):
-                            if np.Infinity > swt_map[ni, nj] > 0 and labels_map[ni, nj] == 0:
+                            if 255 > swt_map[ni, nj] > 0 and labels_map[ni, nj] == 0:
                                 if 0.333 < swt_map[ni, nj] / swt_map[i, j] < 3.0:
                                     labels_map[ni, nj] = label
                                     point_list.append((ni, nj))
                                     stroke_candidate.append((ni, nj))
                 label += 1
                 strokes_candidate.append(stroke_candidate)
-    '''
+    """
     for x in strokes_candidate:
         print x
-    '''
+    """
     letters = []
     # now we check the variance of the possible strokes and we reject the area with too high variance(half of the mean)
     for stroke in strokes_candidate:
@@ -190,21 +186,9 @@ def letters_candidates(swt_map):
     cv2.destroyAllWindows()
 
 
-
 def main():
     swt_map = swt()
-
     letters_candidates(swt_map)
-    '''
-    labels = letters_candidates(swt_map)
-    height, width = labels.shape
-    for i in range(height):
-        for j in range(width):
-            print labels[i, j]
-    cv2.imshow('labels', labels)
-    cv2.waitKey()
-    cv2.destroyAllWindows()
-    '''
 
 
 if __name__ == "__main__":
