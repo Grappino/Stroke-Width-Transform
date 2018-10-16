@@ -25,12 +25,12 @@ def swt():
     edge_map = cv2.Canny(image, 100, 300)
     """
     # testing the Canny Edge
-    cv2.imshow('edge_map', edg_map)
+    cv2.imshow('edge_map', edge_map)
     cv2.waitKey()
     cv2.destroyAllWindows()
     """
-    # SWT Map with all pixel initialized with 255(infinity) as swt value
-    swt_map = np.Infinity*np.ones(image.shape)
+    # SWT Map with all pixel initialized with infinite as swt value
+    swt_map = np.Infinity*np.ones(image.shape, image.dtype)
     # row, column
     height, width = image.shape
     # x gradient, y-gradient are computed using Sobel operator
@@ -171,8 +171,9 @@ def letters_candidates(swt_map):
                 wh_ratio = s_width / s_height
             # we check that the aspect_ratio is a value between 0.1 and 10
             if hw_ratio <= 10 and wh_ratio <= 10:
-                # the ratio between the diameter of connected components and its median stroke must be a value less then 10
-                diam = np.sqrt(s_width * s_width + s_height * s_height)
+                # the ratio between the diameter of connected components and its median stroke
+                # must be a value less then 10
+                diam = np.sqrt(np.power(s_width, 2) + np.power(s_height, 2))
                 med = np.median(swt_vector)
                 dm_ratio = diam / med
                 if dm_ratio <= 10:
