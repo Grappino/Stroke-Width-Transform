@@ -91,12 +91,10 @@ def swt():
         for (i, j) in ray:
             swt_map[i, j] = min(median, swt_map[i, j])
 
-
     # just a test part to see if the swt works
     cv2.imshow('swt_map', swt_map)
     cv2.waitKey()
     cv2.destroyAllWindows()
-
 
     return swt_map
 
