@@ -68,9 +68,7 @@ def swt():
                         if edge_map[next_i, next_j]:
                             # a radius is valid if the angle of the gradient at the starting point is approximately
                             # opposite the angle of the gradient at the end point
-                            sum_theta = np.abs(theta[cur_i, cur_j] + theta[next_i, next_j])
-                            # we need to test more values like pi/2, pi/3, ...
-                            if sum_theta <= np.pi/6:
+                            if -np.pi/6 - theta[cur_i, cur_j] <= theta[next_i, next_j] <= -theta[cur_i, cur_j] + np.pi/6:
                                 # the width of the current stoke is the distance between the start and end points
                                 stroke_width = np.sqrt(np.power((next_i - i), 2) + np.power((next_j - j), 2))
                                 for (_i, _j) in ray:
@@ -93,12 +91,12 @@ def swt():
         for (i, j) in ray:
             swt_map[i, j] = min(median, swt_map[i, j])
 
-    """
+
     # just a test part to see if the swt works
     cv2.imshow('swt_map', swt_map)
     cv2.waitKey()
     cv2.destroyAllWindows()
-    """
+
 
     return swt_map
 
@@ -137,6 +135,7 @@ def letters_candidates(swt_map):
     for x in strokes_candidate:
         print x
     """
+
     letters = []
     # now we check the variance of the possible strokes and we reject the area with too high variance(half of the mean)
     for stroke in strokes_candidate:
