@@ -29,7 +29,7 @@ def swt(image):
     # testing the Canny Edge
     cv2.imshow('edge_map', edge_map)
     cv2.waitKey()
-    #cv2.destroyAllWindows()
+    # cv2.destroyAllWindows()
 
     # SWT Map with all pixel initialized with infinite as swt value
     swt_map = 255*np.ones(image.shape, image.dtype)
@@ -70,7 +70,8 @@ def swt(image):
                         if edge_map[next_i, next_j]:
                             # a radius is valid if the angle of the gradient at the starting point is approximately
                             # opposite the angle of the gradient at the end point
-                            # if -np.pi/6 - theta[cur_i, cur_j] <= theta[next_i, next_j] <= -theta[cur_i, cur_j] + np.pi/6:
+                            # if -np.pi/6 - theta[cur_i, cur_j] <= theta[next_i, next_j]
+                            # <= -theta[cur_i, cur_j] + np.pi/6:
                                 # the width of the current stoke is the distance between the start and end points
                                 stroke_width = np.sqrt(np.power((next_i - i), 2) + np.power((next_j - j), 2))
                                 for (_i, _j) in ray:
@@ -92,7 +93,6 @@ def swt(image):
         median = np.median([swt_map[i, j] for (i, j) in ray])
         for (i, j) in ray:
             swt_map[i, j] = min(median, swt_map[i, j])
-
 
     # just a test part to see if the swt works
     cv2.imshow('swt_map', swt_map)
@@ -122,14 +122,22 @@ def letters_candidates(swt_map, image):
                 labels_map[i, j] = label
                 while len(point_list) > 0:
                     pi, pj = point_list.pop(0)
-                    for ni in range(max(pi - 1, 0), min(pi + 2, nr - 1)):
-                        for nj in range(max(pj - 1, 0), min(pj + 2, nc - 1)):
-                            if 255 > swt_map[ni, nj] > 0 and labels_map[ni, nj] == 0:
-                                if 0.333 < swt_map[ni, nj] / swt_map[i, j] < 3.0:
-                                    if np.var((image[pi][pj],image[ni][nj])) < 10:
-                                        labels_map[ni, nj] = label
-                                        point_list.append((ni, nj))
-                                        stroke_candidate.append((ni, nj))
+                    if 0 <= pi < nr and 0 <= pj < nc:
+                        neighborehood = []
+                        neighborehood.append((pi - 1, pj - 1))
+                        neighborehood.append((pi - 1, pj + 1))
+                        neighborehood.append((pi + 1, pj - 1))
+                        neighborehood.append((pi + 1, pj + 1))
+                        neighborehood.append((pi, pj - 1))
+                        neighborehood.append((pi - 1, pj))
+                        neighborehood.append((pi + 1, pj))
+                        neighborehood.append((pi, pj + 1))
+                        for n in neighborehood:
+                            if 255 > swt_map[n[0], n[1]] > 0 and labels_map[n[0], n[1]] == 0:
+                                if 0.333 <= swt_map[n[0], n[1]]/swt_map[pi, pj] <= 3:
+                                    labels_map[n[0], n[1]] = label
+                                    point_list.append((n[0], n[1]))
+                                    stroke_candidate.append((n[0], n[1]))
                 label += 1
                 strokes_candidate.append(stroke_candidate)
     """
@@ -146,7 +154,6 @@ def letters_candidates(swt_map, image):
         if np.var(swt_vector) <= np.mean(swt_vector):
             letters.append(stroke)
             # we search now the min and max value of x and y in the stroke
-
             max_x, min_x, max_y, min_y = 0, nc, 0, nr
             for point in stroke:
                 if point[0] > max_x:
@@ -179,7 +186,6 @@ def letters_candidates(swt_map, image):
                     if 10 <= s_height <= 300:
                         letters.append(stroke)
 
-
     print label
     result = np.zeros(swt_map.shape)
     for l in letters:
@@ -194,6 +200,7 @@ def letters_candidates(swt_map, image):
         count += 1
     print count
     # supreme count = 41728!!!!!!, 61 with the if condition NO SENSE
+
 
 def main():
     argc = len(sys.argv)
