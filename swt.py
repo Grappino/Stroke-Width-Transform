@@ -110,13 +110,14 @@ def letters_candidates(swt_map, image):
     # number of rows and columns of swt map
     nr, nc = swt_map.shape
     # first valid label and region
-    label = 1
+    label = 0
     for i in range(nr):
         for j in range(nc):
             # if the current pixel is in a stroke
             # assign it to a region with the current label
             # search ... for similar swt value
             if 255 > swt_map[i, j] > 0 and labels_map[i, j] == 0:
+                label += 1
                 stroke_candidate = [(i, j)]
                 point_list = [(i, j)]
                 labels_map[i, j] = label
@@ -138,8 +139,8 @@ def letters_candidates(swt_map, image):
                                     labels_map[n[0], n[1]] = label
                                     point_list.append((n[0], n[1]))
                                     stroke_candidate.append((n[0], n[1]))
-                label += 1
                 strokes_candidate.append(stroke_candidate)
+    print label
     """
     for x in strokes_candidate:
         print x
@@ -152,7 +153,6 @@ def letters_candidates(swt_map, image):
         for point in stroke:
             swt_vector.append(swt_map[point[0], point[1]])
         if np.var(swt_vector) <= np.mean(swt_vector):
-            letters.append(stroke)
             # we search now the min and max value of x and y in the stroke
             max_x, min_x, max_y, min_y = 0, nc, 0, nr
             for point in stroke:
@@ -186,7 +186,6 @@ def letters_candidates(swt_map, image):
                     if 10 <= s_height <= 300:
                         letters.append(stroke)
 
-    print label
     result = np.zeros(swt_map.shape)
     for l in letters:
         for p in l:
