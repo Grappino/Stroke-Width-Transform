@@ -15,12 +15,14 @@ import numpy as np
 
 
 # 3.1 The Stroke Width Transform
-def swt():
+def swt(image):
+    """
     argc = len(sys.argv)
     if argc > 1:
         image = cv2.imread(sys.argv[1], 0)
     else:
         print "Errore! Nessuna immagine inserita!"
+    """
     # We use the Canny Edge Detection to find the edges of the image
     edge_map = cv2.Canny(image, 100, 300)
 
@@ -95,13 +97,12 @@ def swt():
     # just a test part to see if the swt works
     cv2.imshow('swt_map', swt_map)
     cv2.waitKey()
-    cv2.destroyAllWindows()
 
     return swt_map
 
 
 # 3.2 Finding letters candidates
-def letters_candidates(swt_map):
+def letters_candidates(swt_map, image):
     # labels_map initialized to 0
     labels_map = np.zeros(swt_map.shape)
     # strokes_candidate
@@ -125,9 +126,10 @@ def letters_candidates(swt_map):
                         for nj in range(max(pj - 1, 0), min(pj + 2, nc - 1)):
                             if 255 > swt_map[ni, nj] > 0 and labels_map[ni, nj] == 0:
                                 if 0.333 < swt_map[ni, nj] / swt_map[i, j] < 3.0:
-                                    labels_map[ni, nj] = label
-                                    point_list.append((ni, nj))
-                                    stroke_candidate.append((ni, nj))
+                                    if np.var((image[pi][pj],image[ni][nj])) < 10:
+                                        labels_map[ni, nj] = label
+                                        point_list.append((ni, nj))
+                                        stroke_candidate.append((ni, nj))
                 label += 1
                 strokes_candidate.append(stroke_candidate)
     """
@@ -141,8 +143,10 @@ def letters_candidates(swt_map):
         swt_vector = []
         for point in stroke:
             swt_vector.append(swt_map[point[0], point[1]])
-        if np.var(swt_vector) <= 0.5 * np.mean(swt_vector):
+        if np.var(swt_vector) <= np.mean(swt_vector):
+            letters.append(stroke)
             # we search now the min and max value of x and y in the stroke
+
             max_x, min_x, max_y, min_y = 0, nc, 0, nr
             for point in stroke:
                 if point[0] > max_x:
@@ -175,7 +179,8 @@ def letters_candidates(swt_map):
                     if 10 <= s_height <= 300:
                         letters.append(stroke)
 
-    """
+
+    print label
     result = np.zeros(swt_map.shape)
     for l in letters:
         for p in l:
@@ -183,7 +188,7 @@ def letters_candidates(swt_map):
     cv2.imshow('result', result)
     cv2.waitKey()
     cv2.destroyAllWindows()
-    """
+
     count = 0
     for l in letters:
         count += 1
@@ -191,8 +196,13 @@ def letters_candidates(swt_map):
     # supreme count = 41728!!!!!!, 61 with the if condition NO SENSE
 
 def main():
-    swt_map = swt()
-    letters_candidates(swt_map)
+    argc = len(sys.argv)
+    if argc > 1:
+        image = cv2.imread(sys.argv[1], 0)
+    else:
+        print "Errore! Nessuna immagine inserita!"
+    swt_map = swt(image)
+    letters_candidates(swt_map, image)
 
 
 if __name__ == "__main__":
