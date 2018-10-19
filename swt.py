@@ -23,12 +23,12 @@ def swt():
         print "Errore! Nessuna immagine inserita!"
     # We use the Canny Edge Detection to find the edges of the image
     edge_map = cv2.Canny(image, 100, 300)
-    """
+
     # testing the Canny Edge
     cv2.imshow('edge_map', edge_map)
     cv2.waitKey()
-    cv2.destroyAllWindows()
-    """
+    #cv2.destroyAllWindows()
+
     # SWT Map with all pixel initialized with infinite as swt value
     swt_map = 255*np.ones(image.shape, image.dtype)
     # row, column
@@ -68,7 +68,7 @@ def swt():
                         if edge_map[next_i, next_j]:
                             # a radius is valid if the angle of the gradient at the starting point is approximately
                             # opposite the angle of the gradient at the end point
-                            if -np.pi/6 - theta[cur_i, cur_j] <= theta[next_i, next_j] <= -theta[cur_i, cur_j] + np.pi/6:
+                            # if -np.pi/6 - theta[cur_i, cur_j] <= theta[next_i, next_j] <= -theta[cur_i, cur_j] + np.pi/6:
                                 # the width of the current stoke is the distance between the start and end points
                                 stroke_width = np.sqrt(np.power((next_i - i), 2) + np.power((next_j - j), 2))
                                 for (_i, _j) in ray:
@@ -91,12 +91,11 @@ def swt():
         for (i, j) in ray:
             swt_map[i, j] = min(median, swt_map[i, j])
 
-    """
+
     # just a test part to see if the swt works
     cv2.imshow('swt_map', swt_map)
     cv2.waitKey()
     cv2.destroyAllWindows()
-    """
 
     return swt_map
 
@@ -176,6 +175,7 @@ def letters_candidates(swt_map):
                     if 10 <= s_height <= 300:
                         letters.append(stroke)
 
+    """
     result = np.zeros(swt_map.shape)
     for l in letters:
         for p in l:
@@ -183,7 +183,12 @@ def letters_candidates(swt_map):
     cv2.imshow('result', result)
     cv2.waitKey()
     cv2.destroyAllWindows()
-
+    """
+    count = 0
+    for l in letters:
+        count += 1
+    print count
+    # supreme count = 41728!!!!!!, 61 with the if condition NO SENSE
 
 def main():
     swt_map = swt()
