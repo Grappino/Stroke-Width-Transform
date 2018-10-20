@@ -15,24 +15,10 @@ import numpy as np
 
 
 # 3.1 The Stroke Width Transform
-def swt(image):
-    """
-    argc = len(sys.argv)
-    if argc > 1:
-        image = cv2.imread(sys.argv[1], 0)
-    else:
-        print "Errore! Nessuna immagine inserita!"
-    """
-    # We use the Canny Edge Detection to find the edges of the image
-    edge_map = cv2.Canny(image, 100, 300)
-
-    # testing the Canny Edge
-    cv2.imshow('edge_map', edge_map)
-    cv2.waitKey()
-    # cv2.destroyAllWindows()
+def swt(image, edge_map):
 
     # SWT Map with all pixel initialized with infinite as swt value
-    swt_map = 255*np.ones(image.shape, image.dtype)
+    swt_map = 255 * np.ones(image.shape, image.dtype)
     # row, column
     height, width = image.shape
     # x gradient, y-gradient are computed using Sobel operator
@@ -102,7 +88,7 @@ def swt(image):
 
 
 # 3.2 Finding letters candidates
-def letters_candidates(swt_map, image):
+def letters_candidates(swt_map, edge_map):
     # labels_map initialized to 0
     labels_map = np.zeros(swt_map.shape)
     # strokes_candidate
@@ -113,17 +99,18 @@ def letters_candidates(swt_map, image):
     label = 0
     for i in range(nr):
         for j in range(nc):
-            # if the current pixel is in a stroke
-            # assign it to a region with the current label
-            # search ... for similar swt value
-            if 255 > swt_map[i, j] > 0 and labels_map[i, j] == 0:
-                label += 1
-                stroke_candidate = [(i, j)]
-                point_list = [(i, j)]
-                labels_map[i, j] = label
-                while len(point_list) > 0:
-                    pi, pj = point_list.pop(0)
-                    if 0 <= pi < nr and 0 <= pj < nc:
+            # if the current pixel is an edge we start
+            if edge_map[i, j]:
+                # if the current pixel is in a stroke
+                # assign it to a region with the current label
+                # search ... for similar swt value
+                if 255 > swt_map[i, j] > 0 and labels_map[i, j] == 0:
+                    label += 1
+                    stroke_candidate = [(i, j)]
+                    point_list = [(i, j)]
+                    labels_map[i, j] = label
+                    while len(point_list) > 0:
+                        pi, pj = point_list.pop(0)
                         neighborehood = []
                         neighborehood.append((pi - 1, pj - 1))
                         neighborehood.append((pi - 1, pj + 1))
@@ -134,18 +121,17 @@ def letters_candidates(swt_map, image):
                         neighborehood.append((pi + 1, pj))
                         neighborehood.append((pi, pj + 1))
                         for n in neighborehood:
-                            if 255 > swt_map[n[0], n[1]] > 0 and labels_map[n[0], n[1]] == 0:
-                                if 0.333 <= swt_map[n[0], n[1]]/swt_map[pi, pj] <= 3:
-                                    labels_map[n[0], n[1]] = label
-                                    point_list.append((n[0], n[1]))
-                                    stroke_candidate.append((n[0], n[1]))
-                strokes_candidate.append(stroke_candidate)
-    print label
-    """
-    for x in strokes_candidate:
-        print x
-    """
-
+                            if 0 <= n[0] < nr and 0 <= n[1] < nc:
+                                if 255 > swt_map[n[0], n[1]] > 0 and labels_map[n[0], n[1]] == 0:
+                                    if 0.3 <= swt_map[n[0], n[1]]/swt_map[pi, pj] <= 3:
+                                        labels_map[n[0], n[1]] = label
+                                        point_list.append((n[0], n[1]))
+                                        stroke_candidate.append((n[0], n[1]))
+                    strokes_candidate.append(stroke_candidate)
+    counter = 0
+    for s in strokes_candidate:
+        counter += 1
+    print "We have " + str(counter) + " possible strokes"
     letters = []
     # now we check the variance of the possible strokes and we reject the area with too high variance(half of the mean)
     for stroke in strokes_candidate:
@@ -187,18 +173,15 @@ def letters_candidates(swt_map, image):
                         letters.append(stroke)
 
     result = np.zeros(swt_map.shape)
-    for l in letters:
-        for p in l:
-            result[p[0]][p[1]] = 255
-    cv2.imshow('result', result)
-    cv2.waitKey()
-    cv2.destroyAllWindows()
-
     count = 0
     for l in letters:
         count += 1
-    print count
-    # supreme count = 41728!!!!!!, 61 with the if condition NO SENSE
+        for p in l:
+            result[p[0]][p[1]] = 255
+    print "We have " + str(count) + " letters candidates"
+    cv2.imshow('result', result)
+    cv2.waitKey()
+    cv2.destroyAllWindows()
 
 
 def main():
@@ -207,8 +190,14 @@ def main():
         image = cv2.imread(sys.argv[1], 0)
     else:
         print "Errore! Nessuna immagine inserita!"
-    swt_map = swt(image)
-    letters_candidates(swt_map, image)
+    # We use the Canny Edge Detection to find the edges of the image
+    edge_map = cv2.Canny(image, 100, 300)
+    # testing the Canny Edge
+    cv2.imshow('edge_map', edge_map)
+    cv2.waitKey()
+    # cv2.destroyAllWindows()
+    swt_map = swt(image, edge_map)
+    letters_candidates(swt_map, edge_map)
 
 
 if __name__ == "__main__":
