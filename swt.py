@@ -16,14 +16,17 @@ import numpy as np
 
 # 3.1 The Stroke Width Transform
 def swt(image, edge_map):
-
+    image_b = image[:][:][0]
+    image_g = image[:][:][1]
+    image_r = image[:][:][2]
+    image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     # SWT Map with all pixel initialized with infinite as swt value
-    swt_map = 255 * np.ones(image.shape, image.dtype)
+    swt_map = np.Infinity * np.ones(image_gray.shape, image_gray.dtype)
     # row, column
-    height, width = image.shape
+    height, width = image_gray.shape
     # x gradient, y-gradient are computed using Sobel operator
-    gx = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=-1)
-    gy = cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=-1)
+    gx = cv2.Sobel(image_gray, cv2.CV_64F, 1, 0, ksize=-1)
+    gy = cv2.Sobel(image_gray, cv2.CV_64F, 0, 1, ksize=-1)
     # theta
     theta = np.arctan2(gy, gx)
     # list of the rays found
@@ -43,8 +46,8 @@ def swt(image, edge_map):
                 while True:
                     cnt += 1
                     # coordinates of the new current pixel
-                    next_i = int(np.floor(i + sin_g[i, j] * cnt))
-                    next_j = int(np.floor(j + cos_g[i, j] * cnt))
+                    next_i = int(round(i + sin_g[i, j] * cnt))
+                    next_j = int(round(j + cos_g[i, j] * cnt))
                     # if the new coordinates are within the limits of the image
                     if next_i < 0 or next_i >= height or next_j < 0 or next_j >= width:
                         break
@@ -56,8 +59,7 @@ def swt(image, edge_map):
                         if edge_map[next_i, next_j]:
                             # a radius is valid if the angle of the gradient at the starting point is approximately
                             # opposite the angle of the gradient at the end point
-                            # if -np.pi/6 - theta[cur_i, cur_j] <= theta[next_i, next_j]
-                            # <= -theta[cur_i, cur_j] + np.pi/6:
+                            #if -np.pi/6 - theta[cur_i, cur_j] <= theta[next_i, next_j] <= -theta[cur_i, cur_j] + np.pi/6:
                                 # the width of the current stoke is the distance between the start and end points
                                 stroke_width = np.sqrt(np.power((next_i - i), 2) + np.power((next_j - j), 2))
                                 for (_i, _j) in ray:
@@ -73,12 +75,37 @@ def swt(image, edge_map):
     # the median of V is the middle value of a sorted copy of V, V_sorted
     # V_sorted[(N-1)/2], when N is odd, and the average of the two middle values of V_sorted when N is even
 
+
+
+
     for ray in rays:
         # assign to each pixel in a ray the median swt value of pixels in that ray
         # if less than the previous value
         median = np.median([swt_map[i, j] for (i, j) in ray])
         for (i, j) in ray:
             swt_map[i, j] = min(median, swt_map[i, j])
+
+    for i in range(height):
+        for j in range(width):
+            if swt_map[i][j] != np.Infinity:
+                count = 0
+                neighborhood = []
+                neighborhood.append((i - 1, j - 1))
+                neighborhood.append((i - 1, j + 1))
+                neighborhood.append((i + 1, j - 1))
+                neighborhood.append((i + 1, j + 1))
+                neighborhood.append((i, j - 1))
+                neighborhood.append((i - 1, j))
+                neighborhood.append((i + 1, j))
+                neighborhood.append((i, j + 1))
+                for n in neighborhood:
+                    if 0 <= n[0] < height and 0 <= n[1] < width:
+                        if swt_map[n[0]][n[1]] != np.Infinity:
+                            count += 1
+                if count <= 2:
+                    swt_map[i][j] = np.Infinity
+
+
 
     # just a test part to see if the swt works
     cv2.imshow('swt_map', swt_map)
@@ -104,30 +131,62 @@ def letters_candidates(swt_map, edge_map):
                 # if the current pixel is in a stroke
                 # assign it to a region with the current label
                 # search ... for similar swt value
-                if 255 > swt_map[i, j] > 0 and labels_map[i, j] == 0:
+                if np.Infinity > swt_map[i, j] > 0 and labels_map[i, j] == 0:
                     label += 1
-                    stroke_candidate = [(i, j)]
                     point_list = [(i, j)]
                     labels_map[i, j] = label
                     while len(point_list) > 0:
                         pi, pj = point_list.pop(0)
-                        neighborehood = []
-                        neighborehood.append((pi - 1, pj - 1))
-                        neighborehood.append((pi - 1, pj + 1))
-                        neighborehood.append((pi + 1, pj - 1))
-                        neighborehood.append((pi + 1, pj + 1))
-                        neighborehood.append((pi, pj - 1))
-                        neighborehood.append((pi - 1, pj))
-                        neighborehood.append((pi + 1, pj))
-                        neighborehood.append((pi, pj + 1))
-                        for n in neighborehood:
+                        neighborhood = []
+                        neighborhood.append((pi - 1, pj - 1))
+                        neighborhood.append((pi - 1, pj + 1))
+                        neighborhood.append((pi + 1, pj - 1))
+                        neighborhood.append((pi + 1, pj + 1))
+                        neighborhood.append((pi, pj - 1))
+                        neighborhood.append((pi - 1, pj))
+                        neighborhood.append((pi + 1, pj))
+                        neighborhood.append((pi, pj + 1))
+                        for n in neighborhood:
                             if 0 <= n[0] < nr and 0 <= n[1] < nc:
-                                if 255 > swt_map[n[0], n[1]] > 0 and labels_map[n[0], n[1]] == 0:
+                                if np.Infinity > swt_map[n[0], n[1]] > 0 and labels_map[n[0], n[1]] == 0:
                                     if 0.3 <= swt_map[n[0], n[1]]/swt_map[pi, pj] <= 3:
                                         labels_map[n[0], n[1]] = label
                                         point_list.append((n[0], n[1]))
-                                        stroke_candidate.append((n[0], n[1]))
-                    strokes_candidate.append(stroke_candidate)
+
+    for pi in range(nr):
+        for pj in range(nc):
+            neighborhood = []
+            neighborhood.append((pi - 1, pj - 1))
+            neighborhood.append((pi - 1, pj + 1))
+            neighborhood.append((pi + 1, pj - 1))
+            neighborhood.append((pi + 1, pj + 1))
+            neighborhood.append((pi, pj - 1))
+            neighborhood.append((pi - 1, pj))
+            neighborhood.append((pi + 1, pj))
+            neighborhood.append((pi, pj + 1))
+            if labels_map[pi][pj]:
+                for n in neighborhood:
+                    if 0 <= n[0] < nr and 0 <= n[1] < nc:
+                        if labels_map[n[0]][n[1]] != labels_map[pi][pj] and labels_map[n[0]][n[1]] != 0:
+                            labels_map[n[0]][n[1]] = labels_map[pi][pj]
+
+
+
+    for label in np.unique(labels_map):
+        if label:
+            candidate = np.zeros(swt_map.shape, swt_map.dtype)
+            stroke_candidate = []
+            for i in range(nr):
+                for j in range(nc):
+                    if labels_map[i][j] == label:
+                        stroke_candidate.append((i, j))
+                        candidate[i][j] = 255
+            if len(stroke_candidate) > 30:
+                strokes_candidate.append(stroke_candidate)
+            cv2.imshow("candidate",candidate)
+            cv2.waitKey()
+
+
     counter = 0
     for s in strokes_candidate:
         counter += 1
@@ -187,7 +246,7 @@ def letters_candidates(swt_map, edge_map):
 def main():
     argc = len(sys.argv)
     if argc > 1:
-        image = cv2.imread(sys.argv[1], 0)
+        image = cv2.imread(sys.argv[1], 1)
     else:
         print "Errore! Nessuna immagine inserita!"
     # We use the Canny Edge Detection to find the edges of the image
