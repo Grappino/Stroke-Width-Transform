@@ -259,6 +259,10 @@ def letters_finder(swt, edge_map):
 
     # now we print the different letters
     for l in letters:
+        print "Height: " + str(get_letter_height(l)) + "px"
+        print "Width: " + str(get_letter_width(l)) + "px"
+        print "SWT: " + str(get_letter_swt(l, swt))
+        print get_letter_extreme_sx_dx(l)
         temp = np.zeros(swt.shape)
         for p in l:
             temp[p[0], p[1]] = 255
@@ -267,6 +271,58 @@ def letters_finder(swt, edge_map):
         cv2.destroyAllWindows()
 
     return letters
+
+
+def get_letter_height(letter):
+    # difference between the highest and the lowest value of y
+    y, x = letter[0]
+    y_min, y_max = y, y
+    for point in letter:
+        if point[0] > y_max:
+            y_max = point[0]
+        elif point[0] < y_min:
+            y_min = point[0]
+    return abs(y_min - y_max)
+
+
+def get_letter_width(letter):
+    # difference between the highest and the lowest value of x
+    y, x = letter[0]
+    x_min, x_max = x, x
+    for point in letter:
+        if point[1] > x_max:
+            x_max = point[1]
+        elif point[1] < x_min:
+            x_min = point[1]
+    return abs(x_min - x_max)
+
+
+def get_letter_swt(letter, swt):
+    # medium value of swt of all internal points
+    return np.median([swt[i, j] for (i, j) in letter])
+
+
+def get_letter_extreme_sx_dx(letter):
+    # return the most extern px value on right and left side of a letter
+    # we use these two values to calculate the distance between two letters
+    y, x = letter[0]
+    x_min, x_max = x, x
+    for point in letter:
+        if point[1] > x_max:
+            x_max = point[1]
+        elif point[1] < x_min:
+            x_min = point[1]
+    return x_min, x_max
+
+
+# 3.3 Grouping letters into text line
+"""
+def words_finder(letters, swt_map):
+    # now we need to find the letters that form a single word
+    # the letters can be disordered in the letters vector (e.g "puma" -> p,m,u,a with puma_logo)
+    # as first thing i need to reunion the words that have similar dimension
+    # then i need to analize the groups and split every groups in new sub-groups tha have similar swt and are nearby
+"""
 
 
 def main():
@@ -289,6 +345,7 @@ def main():
     else:
         swt_map = swt_transform(image, edge_map)
     letters = letters_finder(swt_map, edge_map)
+    words_finder(letters, swt_map)
 
 
 if __name__ == "__main__":
