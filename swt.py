@@ -315,6 +315,7 @@ def get_letter_extreme_sx_dx(letter):
             x_min = point[1]
     return x_min, x_max
 
+
 def get_letter_extreme_top_down(letter):
     # return the most extern px value on top and down side of a letter
     y, x = letter[0]
@@ -326,11 +327,10 @@ def get_letter_extreme_top_down(letter):
             y_min = point[0]
     return y_min, y_max
 
+
 def group_letters(letters):
-    y_min_group = np.Infinity
-    y_max_group = 0
-    x_max_group = 0
-    x_min_group = np.Infinity
+    y_min_group, y_max_group = np.Infinity, 0
+    x_max_group, x_min_group = 0, np.Infinity
     for letter in letters:
         x_min, x_max = get_letter_extreme_sx_dx(letter)
         y_min, y_max = get_letter_extreme_top_down(letter)
@@ -343,6 +343,8 @@ def group_letters(letters):
         if y_max > y_max_group:
             y_max_group = y_max
     return x_min_group, x_max_group, y_min_group, y_max_group
+
+
 # 3.3 Grouping letters into text line
 def words_finder(letters, swt):
     # now we need to find the letters that form a single word
@@ -399,8 +401,6 @@ def words_finder(letters, swt):
         # if len(words) >= 3:
         words.append(word)
     print len(words)
-
-
 
 
 def main():
