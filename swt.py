@@ -423,7 +423,7 @@ def words_finder(letters, swt):
             count += 1
         cnt += 1
         # control on the assignment of the labels
-        print labels
+        # print labels
 
     # we need to aggregate the letters with the same labels in a single word
     words = []
