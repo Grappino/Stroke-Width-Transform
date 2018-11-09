@@ -316,13 +316,63 @@ def get_letter_extreme_sx_dx(letter):
 
 
 # 3.3 Grouping letters into text line
-"""
-def words_finder(letters, swt_map):
+def words_finder(letters, swt):
     # now we need to find the letters that form a single word
     # the letters can be disordered in the letters vector (e.g "puma" -> p,m,u,a with puma_logo)
     # as first thing i need to reunion the words that have similar dimension
-    # then i need to analize the groups and split every groups in new sub-groups tha have similar swt and are nearby
-"""
+    # then i need to analyze the groups and split every groups in new sub-groups tha have similar swt and are nearby
+    labels = np.zeros(len(letters))
+    label = 0
+    # the counter is used to moving through the labels vector
+    cnt = 0
+    for first_letter in letters:
+        if labels[cnt] == 0:
+            label += 1
+            labels[cnt] = label
+        # we grab the first point of a letter to check if the next letter is not the same letter
+        fp_fl = first_letter[0]
+        count = 0
+        for second_letter in letters:
+            fp_sl = second_letter[0]
+            if fp_fl != fp_sl:
+                # letters on the same word have the ratio between the median stroke widths has to be less than 2.0
+                if 0.5 < get_letter_swt(first_letter, swt)/get_letter_swt(second_letter, swt) < 2:
+                    # the height ratio of the letters must not exceed 2.0 (due to the difference between capital and
+                    # lower case letters)
+                    if 0.5 < get_letter_height(first_letter)/get_letter_height(second_letter) < 2:
+                        # now we control the distance between the letters that must be at most 1/3
+                        # of the width of the larger letter
+                        xf_min, xf_max = get_letter_extreme_sx_dx(first_letter)
+                        xs_min, xs_max = get_letter_extreme_sx_dx(second_letter)
+                        width_fl = get_letter_width(first_letter)
+                        width_sl = get_letter_width(second_letter)
+                        width_to_use = width_fl
+                        if width_fl < width_sl:
+                            width_to_use = width_sl
+                        if abs(xf_max - xs_min) < width_to_use/3 or abs(xs_max - xf_min) < width_to_use/3:
+                            labels[count] = label
+            count += 1
+        cnt += 1
+        """
+        # control on the assignment of the labels
+        print labels
+        """
+
+    # we need to aggregate the letters with the same labels in a single word
+    words = []
+    for lab in np.unique(labels):
+        cnt = 0
+        word = []
+        for letter in letters:
+            if labels[cnt] == lab:
+                word.append(letter)
+            cnt += 1
+        # this condition is suggested in the official documentation but we are not using that
+        # if len(words) >= 3:
+        words.append(word)
+    print len(words)
+
+
 
 
 def main():
