@@ -258,20 +258,21 @@ def letters_finder(swt, edge_map):
                         letters.append(let_cand)
 
     # now we print the different letters
-    """
-    for l in letters:    
+
+    for l in letters:
         print "Height: " + str(get_letter_height(l)) + "px"
         print "Width: " + str(get_letter_width(l)) + "px"
         print "SWT: " + str(get_letter_swt(l, swt))
         print get_letter_extreme_sx_dx(l)
         print get_letter_extreme_top_down(l)
         temp = np.zeros(swt.shape)
+        """
         for p in l:
             temp[p[0], p[1]] = 255
         cv2.imshow('temp', temp)
         cv2.waitKey()
         cv2.destroyAllWindows()
-    """
+        """
     return letters
 
 
@@ -368,7 +369,7 @@ def words_finder(letters, swt):
     # now we need to find the letters that form a single word
     # the letters can be disordered in the letters vector (e.g "puma" -> p,m,u,a with puma_logo)
     # as first thing i need to reunion the words that have similar dimension
-    # then i need to analyze the groups and split every groups in new sub-groups tha have similar swt and are nearby
+    # then we need to analyze the groups and split every groups in new sub-groups tha have similar swt and are nearby
     labels = np.zeros(len(letters))
     label = 0
     # the counter is used to moving through the labels vector
@@ -407,13 +408,14 @@ def words_finder(letters, swt):
                             if width_fl < width_sl:
                                 width_to_use = width_sl
                             if abs(xf_max - xs_min) < width_to_use/3 or abs(xs_max - xf_min) < width_to_use/3:
-                                labels[count] = label
+                                if labels[count] == 0:
+                                    labels[count] = label
+                                else:
+                                    labels[cnt] = labels[count]
             count += 1
         cnt += 1
-        """
         # control on the assignment of the labels
         print labels
-        """
 
     # we need to aggregate the letters with the same labels in a single word
     words = []
