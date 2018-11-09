@@ -263,6 +263,7 @@ def letters_finder(swt, edge_map):
         print "Width: " + str(get_letter_width(l)) + "px"
         print "SWT: " + str(get_letter_swt(l, swt))
         print get_letter_extreme_sx_dx(l)
+        print get_letter_extreme_top_down(l)
         temp = np.zeros(swt.shape)
         for p in l:
             temp[p[0], p[1]] = 255
@@ -314,7 +315,34 @@ def get_letter_extreme_sx_dx(letter):
             x_min = point[1]
     return x_min, x_max
 
+def get_letter_extreme_top_down(letter):
+    # return the most extern px value on top and down side of a letter
+    y, x = letter[0]
+    y_min, y_max = y, y
+    for point in letter:
+        if point[0] > y_max:
+            y_max = point[0]
+        elif point[0] < y_min:
+            y_min = point[0]
+    return y_min, y_max
 
+def group_letters(letters):
+    y_min_group = np.Infinity
+    y_max_group = 0
+    x_max_group = 0
+    x_min_group = np.Infinity
+    for letter in letters:
+        x_min, x_max = get_letter_extreme_sx_dx(letter)
+        y_min, y_max = get_letter_extreme_top_down(letter)
+        if x_min < x_min_group:
+            x_min_group = x_min
+        if x_max > x_max_group:
+            x_max_group = x_max
+        if y_min < y_min_group:
+            y_min_group = y_min
+        if y_max > y_max_group:
+            y_max_group = y_max
+    return x_min_group, x_max_group, y_min_group, y_max_group
 # 3.3 Grouping letters into text line
 def words_finder(letters, swt):
     # now we need to find the letters that form a single word
@@ -395,7 +423,26 @@ def main():
     else:
         swt_map = swt_transform(image, edge_map)
     letters = letters_finder(swt_map, edge_map)
-    words_finder(letters, swt_map)
+    x_min_group, x_max_group, y_min_group, y_max_group = group_letters(letters)
+    print (x_min_group, x_max_group, y_min_group, y_max_group)
+    for i in range(y_min_group, y_max_group+1):
+        if argc > 2:
+            image[i][x_min_group] = 0
+            image[i][x_max_group] = 0
+        else:
+            image[i][x_min_group] = 255
+            image[i][x_max_group] = 255
+    for i in range(x_min_group, x_max_group+1):
+        if argc > 2:
+            image[y_min_group][i] = 0
+            image[y_max_group][i] = 0
+        else:
+            image[y_min_group][i] = 255
+            image[y_max_group][i] = 255
+    cv2.imshow("finale", image)
+    cv2.waitKey()
+    cv2.destroyAllWindows()
+    #words_finder(letters, swt_map)
 
 
 if __name__ == "__main__":
