@@ -258,7 +258,7 @@ def letters_finder(swt, edge_map):
                         letters.append(let_cand)
 
     # now we print the different letters
-
+    """
     for l in letters:
         print "Height: " + str(get_letter_height(l)) + "px"
         print "Width: " + str(get_letter_width(l)) + "px"
@@ -266,13 +266,13 @@ def letters_finder(swt, edge_map):
         print get_letter_extreme_sx_dx(l)
         print get_letter_extreme_top_down(l)
         temp = np.zeros(swt.shape)
-        """
+
         for p in l:
             temp[p[0], p[1]] = 255
         cv2.imshow('temp', temp)
         cv2.waitKey()
         cv2.destroyAllWindows()
-        """
+    """
     return letters
 
 
@@ -409,9 +409,17 @@ def words_finder(letters, swt):
                                 width_to_use = width_sl
                             if abs(xf_max - xs_min) < width_to_use/3 or abs(xs_max - xf_min) < width_to_use/3:
                                 if labels[count] == 0:
-                                    labels[count] = label
+                                    labels[count] = labels[cnt]
+                                elif labels[count] < labels[cnt]:
+                                    temp = labels[cnt]
+                                    for i in range(len(labels)):
+                                        if labels[i] == temp:
+                                            labels[i] = labels[count]
                                 else:
-                                    labels[cnt] = labels[count]
+                                    temp2 = labels[count]
+                                    for i in range(len(labels)):
+                                        if labels[i] == temp2:
+                                            labels[i] = labels[cnt]
             count += 1
         cnt += 1
         # control on the assignment of the labels
