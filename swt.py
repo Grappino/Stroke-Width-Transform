@@ -258,7 +258,8 @@ def letters_finder(swt, edge_map):
                         letters.append(let_cand)
 
     # now we print the different letters
-    for l in letters:
+    """
+    for l in letters:    
         print "Height: " + str(get_letter_height(l)) + "px"
         print "Width: " + str(get_letter_width(l)) + "px"
         print "SWT: " + str(get_letter_swt(l, swt))
@@ -270,7 +271,7 @@ def letters_finder(swt, edge_map):
         cv2.imshow('temp', temp)
         cv2.waitKey()
         cv2.destroyAllWindows()
-
+    """
     return letters
 
 
@@ -384,20 +385,29 @@ def words_finder(letters, swt):
             if fp_fl != fp_sl:
                 # letters on the same word have the ratio between the median stroke widths has to be less than 2.0
                 if 0.5 < get_letter_swt(first_letter, swt)/get_letter_swt(second_letter, swt) < 2:
-                    # the height ratio of the letters must not exceed 2.0 (due to the difference between capital and
-                    # lower case letters)
-                    if 0.5 < get_letter_height(first_letter)/get_letter_height(second_letter) < 2:
-                        # now we control the distance between the letters that must be at most 1/3
-                        # of the width of the larger letter
-                        xf_min, xf_max = get_letter_extreme_sx_dx(first_letter)
-                        xs_min, xs_max = get_letter_extreme_sx_dx(second_letter)
-                        width_fl = get_letter_width(first_letter)
-                        width_sl = get_letter_width(second_letter)
-                        width_to_use = width_fl
-                        if width_fl < width_sl:
-                            width_to_use = width_sl
-                        if abs(xf_max - xs_min) < width_to_use/3 or abs(xs_max - xf_min) < width_to_use/3:
-                            labels[count] = label
+                    # we control that we are not considering a letter that is up or down another one
+                    yf_min, yf_max = get_letter_extreme_top_down(first_letter)
+                    ys_min, ys_max = get_letter_extreme_top_down(second_letter)
+                    height_fl = get_letter_height(first_letter)
+                    height_sl = get_letter_height(second_letter)
+                    height_to_use = height_fl
+                    if height_fl < height_sl:
+                        height_to_use = height_sl
+                    if abs(yf_max - ys_max) < height_to_use/2:
+                        # the height ratio of the letters must not exceed 2.0 (due to the difference between capital and
+                        # lower case letters)
+                        if 0.5 < get_letter_height(first_letter)/get_letter_height(second_letter) < 2:
+                            # now we control the distance between the letters that must be at most 1/3
+                            # of the width of the larger letter
+                            xf_min, xf_max = get_letter_extreme_sx_dx(first_letter)
+                            xs_min, xs_max = get_letter_extreme_sx_dx(second_letter)
+                            width_fl = get_letter_width(first_letter)
+                            width_sl = get_letter_width(second_letter)
+                            width_to_use = width_fl
+                            if width_fl < width_sl:
+                                width_to_use = width_sl
+                            if abs(xf_max - xs_min) < width_to_use/3 or abs(xs_max - xf_min) < width_to_use/3:
+                                labels[count] = label
             count += 1
         cnt += 1
         """
@@ -418,7 +428,7 @@ def words_finder(letters, swt):
         # if len(words) >= 3:
         words.append(word)
     # we check number of words in the image
-    print len(words)
+    # print len(words)
     return words
 
 
@@ -444,7 +454,6 @@ def main():
     letters = letters_finder(swt_map, edge_map)
     words = words_finder(letters, swt_map)
     highlight_words(words, image)
-
 
 
 if __name__ == "__main__":
