@@ -328,21 +328,38 @@ def get_letter_extreme_top_down(letter):
     return y_min, y_max
 
 
-def group_letters(letters):
-    y_min_group, y_max_group = np.Infinity, 0
-    x_max_group, x_min_group = 0, np.Infinity
-    for letter in letters:
-        x_min, x_max = get_letter_extreme_sx_dx(letter)
-        y_min, y_max = get_letter_extreme_top_down(letter)
-        if x_min < x_min_group:
-            x_min_group = x_min
-        if x_max > x_max_group:
-            x_max_group = x_max
-        if y_min < y_min_group:
-            y_min_group = y_min
-        if y_max > y_max_group:
-            y_max_group = y_max
-    return x_min_group, x_max_group, y_min_group, y_max_group
+def highlight_words(words, image):
+    for word in words:
+        y_min_group, y_max_group = np.Infinity, 0
+        x_max_group, x_min_group = 0, np.Infinity
+        for letter in word:
+            x_min, x_max = get_letter_extreme_sx_dx(letter)
+            y_min, y_max = get_letter_extreme_top_down(letter)
+            if x_min < x_min_group:
+                x_min_group = x_min
+            if x_max > x_max_group:
+                x_max_group = x_max
+            if y_min < y_min_group:
+                y_min_group = y_min
+            if y_max > y_max_group:
+                y_max_group = y_max
+        for i in range(y_min_group, y_max_group + 1):
+            """if argc > 2:
+                image[i][x_min_group] = 0
+                image[i][x_max_group] = 0
+            else:"""
+            image[i][x_min_group] = 255
+            image[i][x_max_group] = 255
+        for i in range(x_min_group, x_max_group + 1):
+            """if argc > 2:
+                image[y_min_group][i] = 0
+                image[y_max_group][i] = 0
+            else:"""
+            image[y_min_group][i] = 255
+            image[y_max_group][i] = 255
+    cv2.imshow("final_image", image)
+    cv2.waitKey()
+    cv2.destroyAllWindows()
 
 
 # 3.3 Grouping letters into text line
@@ -400,7 +417,9 @@ def words_finder(letters, swt):
         # this condition is suggested in the official documentation but we are not using that
         # if len(words) >= 3:
         words.append(word)
+    # we check number of words in the image
     print len(words)
+    return words
 
 
 def main():
@@ -423,26 +442,9 @@ def main():
     else:
         swt_map = swt_transform(image, edge_map)
     letters = letters_finder(swt_map, edge_map)
-    x_min_group, x_max_group, y_min_group, y_max_group = group_letters(letters)
-    print (x_min_group, x_max_group, y_min_group, y_max_group)
-    for i in range(y_min_group, y_max_group+1):
-        if argc > 2:
-            image[i][x_min_group] = 0
-            image[i][x_max_group] = 0
-        else:
-            image[i][x_min_group] = 255
-            image[i][x_max_group] = 255
-    for i in range(x_min_group, x_max_group+1):
-        if argc > 2:
-            image[y_min_group][i] = 0
-            image[y_max_group][i] = 0
-        else:
-            image[y_min_group][i] = 255
-            image[y_max_group][i] = 255
-    cv2.imshow("finale", image)
-    cv2.waitKey()
-    cv2.destroyAllWindows()
-    #words_finder(letters, swt_map)
+    words = words_finder(letters, swt_map)
+    highlight_words(words, image)
+
 
 
 if __name__ == "__main__":
