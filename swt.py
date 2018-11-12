@@ -92,8 +92,7 @@ def swt_transform(img, edges, clear_text_on_dark_background=True):
     for i in range(nr):
         for j in range(nc):
             if swt[i][j] != 255:
-                count = 0
-                neighborhood = []
+                count, neighborhood = 0, []
                 neighborhood.append((i - 1, j - 1))
                 neighborhood.append((i - 1, j + 1))
                 neighborhood.append((i + 1, j - 1))
@@ -168,8 +167,7 @@ def letters_finder(swt, edge_map):
     for i in range(nr):
         for j in range(nc):
             if labels[i, j] != 0:
-                same_label = []
-                neighborhood = []
+                same_label, neighborhood = [], []
                 neighborhood.append((i - 1, j - 1))
                 neighborhood.append((i - 1, j + 1))
                 neighborhood.append((i + 1, j - 1))
@@ -196,12 +194,12 @@ def letters_finder(swt, edge_map):
     """
 
     # now we assign the points with the same labels to the same group( a letter candidate)
-    for l in np.unique(labels):
-        if l != 0.0:
+    for label in np.unique(labels):
+        if label != 0.0:
             stroke = []
             for i in range(nr):
                 for j in range(nc):
-                    if labels[i, j] == l:
+                    if labels[i, j] == label:
                         stroke.append((i, j))
             strokes.append(stroke)
     # end of the Connected Component algorithm
@@ -218,56 +216,39 @@ def letters_finder(swt, edge_map):
     """
 
     letters = []
-    # now we check the variance of the possible strokes and we reject the area with too high variance(half of the mean)
-    for let_cand in strokes:
-        swt_vector = []
-        for point in let_cand:
-            swt_vector.append(swt[point[0], point[1]])
-        if np.var(swt_vector) <= np.mean(swt_vector):
+    # now we check the variance of the possible strokes and we reject the area with too high variance
+    for stroke in strokes:
+        var = np.var([swt[i, j] for (i, j) in stroke])
+        mean = np.mean([swt[i, j] for (i, j) in stroke])
+        if var <= 2 * mean:
             # we search now the min and max value of x and y in the stroke
-            max_x, min_x, max_y, min_y = 0, nc, 0, nr
-            for point in let_cand:
-                if point[0] > max_x:
-                    max_x = point[0]
-                if point[0] < min_x:
-                    min_x = point[0]
-                if point[1] > max_y:
-                    max_y = point[1]
-                if point[1] < min_y:
-                    min_y = point[1]
-            s_width = max_x - min_x
-            s_height = max_y - min_y
-            if min_x == max_x:
-                hw_ratio = 11
-            else:
-                hw_ratio = s_height / s_width
-            if min_y == max_y:
-                wh_ratio = 11
-            else:
-                wh_ratio = s_width / s_height
+            s_width = get_letter_width(stroke)
+            s_height = get_letter_height(stroke)
+            hw_ratio = s_height / s_width
+            wh_ratio = s_width / s_height
             # we check that the aspect_ratio is a value between 0.1 and 10
             if hw_ratio <= 10 and wh_ratio <= 10:
                 # the ratio between the diameter of connected components and its median stroke
                 # must be a value less then 10
                 diam = np.sqrt(np.power(s_width, 2) + np.power(s_height, 2))
-                med = np.median(swt_vector)
+                med = get_letter_swt(stroke, swt)
                 dm_ratio = diam / med
                 if dm_ratio <= 10:
                     # we check that the height is a value between 10px and 300px
                     if 10 <= s_height <= 300:
-                        letters.append(let_cand)
+                        letters.append(stroke)
 
     # now we print the different letters
     """
-    for l in letters:
-        print "Height: " + str(get_letter_height(l)) + "px"
-        print "Width: " + str(get_letter_width(l)) + "px"
-        print "SWT: " + str(get_letter_swt(l, swt))
-        print get_letter_extreme_sx_dx(l)
-        print get_letter_extreme_top_down(l)
+    for label in letters:
+        print "Height: " + str(get_letter_height(label)) + "px"
+        print "Width: " + str(get_letter_width(label)) + "px"
+        print "SWT: " + str(get_letter_swt(label, swt))
+        print get_letter_extreme_sx_dx(label)
+        print get_letter_extreme_top_down(label)
         temp = np.zeros(swt.shape)
 
-        for p in l:
+        for p in label:
             temp[p[0], p[1]] = 255
         cv2.imshow('temp', temp)
         cv2.waitKey()
