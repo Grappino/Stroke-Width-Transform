@@ -224,8 +224,12 @@ def letters_finder(swt, edge_map):
             # we search now the min and max value of x and y in the stroke
             s_width = get_letter_width(stroke)
             s_height = get_letter_height(stroke)
-            hw_ratio = s_height / s_width
-            wh_ratio = s_width / s_height
+            if s_height == 0 or s_width == 0:
+                hw_ratio = 11
+                wh_ratio = 11
+            else:
+                hw_ratio = s_height / s_width
+                wh_ratio = s_width / s_height
             # we check that the aspect_ratio is a value between 0.1 and 10
             if hw_ratio <= 10 and wh_ratio <= 10:
                 # the ratio between the diameter of connected components and its median stroke
@@ -311,7 +315,7 @@ def get_letter_extreme_top_down(letter):
     return y_min, y_max
 
 
-def highlight_words(words, image):
+def highlight_words(words, image, clear_text_on_dark_background=True):
     for word in words:
         y_min_group, y_max_group = np.Infinity, 0
         x_max_group, x_min_group = 0, np.Infinity
@@ -327,19 +331,19 @@ def highlight_words(words, image):
             if y_max > y_max_group:
                 y_max_group = y_max
         for i in range(y_min_group, y_max_group + 1):
-            """if argc > 2:
+            if clear_text_on_dark_background:
+                image[i][x_min_group] = 255
+                image[i][x_max_group] = 255
+            else:
                 image[i][x_min_group] = 0
                 image[i][x_max_group] = 0
-            else:"""
-            image[i][x_min_group] = 255
-            image[i][x_max_group] = 255
         for i in range(x_min_group, x_max_group + 1):
-            """if argc > 2:
+            if clear_text_on_dark_background:
+                image[y_min_group][i] = 255
+                image[y_max_group][i] = 255
+            else:
                 image[y_min_group][i] = 0
                 image[y_max_group][i] = 0
-            else:"""
-            image[y_min_group][i] = 255
-            image[y_max_group][i] = 255
     cv2.imshow("final_image", image)
     cv2.waitKey()
     cv2.destroyAllWindows()
@@ -444,7 +448,10 @@ def main():
         swt_map = swt_transform(image, edge_map)
     letters = letters_finder(swt_map, edge_map)
     words = words_finder(letters, swt_map)
-    highlight_words(words, image)
+    if argc > 2:
+        highlight_words(words, image, False)
+    else:
+        highlight_words(words, image)
 
 
 if __name__ == "__main__":
