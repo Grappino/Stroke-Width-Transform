@@ -315,7 +315,32 @@ def get_letter_extreme_top_down(letter):
     return y_min, y_max
 
 
-def highlight_words(words, image, clear_text_on_dark_background=True):
+def highlight_letters(letters, original, clear_text_on_dark_background=True):
+    image = original.copy()
+    for letter in letters:
+        x_min, x_max = get_letter_extreme_sx_dx(letter)
+        y_min, y_max = get_letter_extreme_top_down(letter)
+        for i in range(y_min, y_max + 1):
+            if clear_text_on_dark_background:
+                image[i][x_min] = 255
+                image[i][x_max] = 255
+            else:
+                image[i][x_min] = 0
+                image[i][x_max] = 0
+        for i in range(x_min, x_max + 1):
+            if clear_text_on_dark_background:
+                image[y_min][i] = 255
+                image[y_max][i] = 255
+            else:
+                image[y_min][i] = 0
+                image[y_max][i] = 0
+    cv2.imshow("letters_image", image)
+    cv2.waitKey()
+    cv2.destroyAllWindows()
+
+
+def highlight_words(words, original, clear_text_on_dark_background=True):
+    image = original.copy()
     for word in words:
         y_min_group, y_max_group = np.Infinity, 0
         x_max_group, x_min_group = 0, np.Infinity
@@ -447,6 +472,10 @@ def main():
     else:
         swt_map = swt_transform(image, edge_map)
     letters = letters_finder(swt_map, edge_map)
+    if argc > 2:
+        highlight_letters(letters, image, False)
+    else:
+        highlight_letters(letters, image)
     words = words_finder(letters, swt_map)
     if argc > 2:
         highlight_words(words, image, False)
